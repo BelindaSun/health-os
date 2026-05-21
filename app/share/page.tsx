@@ -699,9 +699,9 @@ export default function SharePage() {
             <span>·</span>
             <span>{profile.gender === "female" ? "女" : profile.gender === "male" ? "男" : "其他"}</span>
             <span>·</span>
-            <span>{profile.weightKg ?? profile.weight} kg</span>
-            <span>·</span>
-            <span>{profile.heightCm ?? profile.height} cm</span>
+            <span>{(profile as any).weightKg ?? (profile as any).weight} kg</span>
+<span>·</span>
+<span>{(profile as any).heightCm ?? (profile as any).height} cm</span>
           </div>
           <p className="text-xs text-slate-500 mt-2">
             生成于 {new Date(decoded.createdAt).toLocaleDateString("zh-CN", {
