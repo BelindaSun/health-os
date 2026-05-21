@@ -1,14 +1,10 @@
 // ============================================================
-//  Health OS — AI Prompts v2
-//  7个模块完整升级版，个性化变量全部注入
-//  每个 prompt 返回严格 JSON，extractJson.ts 负责兜底
+//  Health OS — AI Prompts v3
+//  新增 no_appetite 挑战类型支持
 // ============================================================
 
 import type { UserProfile } from "../../types/health";
 
-// ─── 工具函数 ────────────────────────────────────────────────
-
-/** 把目标枚举翻译成中文 */
 function goalLabel(goal: UserProfile["goal"]): string {
   const map = {
     weight_loss: "减脂瘦身",
@@ -19,31 +15,31 @@ function goalLabel(goal: UserProfile["goal"]): string {
   return map[goal] ?? "综合健康";
 }
 
-/** 把健身水平翻译成中文 */
 function fitnessLabel(level: UserProfile["fitnessLevel"]): string {
   const map = { beginner: "初级", intermediate: "中级", advanced: "高级" };
   return map[level] ?? "初级";
 }
 
-/** 把活动水平翻译成中文 */
 function activityLabel(level: UserProfile["activityLevel"]): string {
   const map = { low: "低（久坐为主）", medium: "中（轻度活动）", high: "高（经常运动）" };
   return map[level] ?? "低";
 }
 
-/** 把主要挑战翻译成中文 */
 function challengeLabel(c: UserProfile["mainChallenge"]): string {
-  const map = { appetite: "食欲难控制", motivation: "缺乏动力", time: "时间不够" };
+  const map = {
+    appetite: "食欲难控制（容易吃多）",
+    motivation: "缺乏动力",
+    time: "时间不够",
+    no_appetite: "没有食欲（吃不下，难以摄入足够热量）",
+  };
   return map[c] ?? "综合挑战";
 }
 
-/** 性别翻译 */
 function genderLabel(g: UserProfile["gender"]): string {
   const map = { male: "男性", female: "女性", other: "不便透露" };
   return map[g] ?? "不限";
 }
 
-/** 根据目标和性别推算基础热量范围 */
 function estimateCalories(p: UserProfile): string {
   const bmr =
     p.gender === "female"
@@ -57,7 +53,6 @@ function estimateCalories(p: UserProfile): string {
   return `${tdee - 100}~${tdee + 100}`;
 }
 
-/** BMI 计算 */
 function bmi(p: UserProfile): string {
   return (p.weightKg / ((p.heightCm / 100) ** 2)).toFixed(1);
 }
@@ -71,6 +66,12 @@ export function nutritionPrompt(p: UserProfile): string {
     premium:  { label: "豪华奢侈型", desc: "不限预算，追求最优营养和口感体验，可以使用和牛、帝王蟹、三文鱼刺身、松露、有机食材、进口超级食品等高端食材，每餐都要精致丰盛。" },
   };
   const style = dietStyleMap[p.dietStyle ?? "budget"];
+
+  // 针对没食欲用户的额外营养指引
+  const noAppetiteNote = p.mainChallenge === "no_appetite"
+    ? `\n- 特别注意：用户食欲差、吃不下，请优先推荐热量密度高、体积小、易入口的食物（如坚果酱、全脂牛奶、香蕉、燕麦、鸡蛋、奶昔等），减少高纤维低热量食物的占比，每餐不要量太大，可以增加加餐次数到2次。`
+    : "";
+
   return `
 你是一位专业营养师。根据以下用户信息，制定一份7天个性化饮食计划。
 
@@ -82,6 +83,7 @@ export function nutritionPrompt(p: UserProfile): string {
 - 建议每日热量范围：${estimateCalories(p)} kcal
 - 每周饮食预算：约 ¥${p.weeklyBudget}
 - 饮食风格：${style.label} — ${style.desc}
+- 最大挑战：${challengeLabel(p.mainChallenge)}${noAppetiteNote}
 
 【要求】
 1. 严格按照"${style.label}"风格选择食材，食材档次和描述要与该风格完全匹配。
@@ -272,6 +274,15 @@ export function shoppingPrompt(p: UserProfile): string {
 // ─── Prompt 5：每日动力 ──────────────────────────────────────
 
 export function motivationPrompt(p: UserProfile): string {
+  // 针对没食欲用户的专属动力策略
+  const noAppetiteStrategy = p.mainChallenge === "no_appetite" ? `
+【没有食欲的专项策略】
+该用户的核心挑战是吃不下、没食欲，这是增肌路上最大的障碍。请重点围绕这个挑战：
+- dailyTask：给一个今天能执行的"让自己多吃一口"的具体小任务，比如在某餐加一勺花生酱或多喝一杯全脂牛奶
+- mindsetShift：帮助用户把"吃饭"从负担变成工具，从"我不饿"转变为"这是我增肌的训练之一"
+- morningRoutine：包含一个帮助刺激食欲的早晨习惯（如晨练、冷热水交替淋浴等）
+` : "";
+
   return `
 你是一位高效的个人动力教练。根据以下用户信息，生成一套每日动力方案。
 
@@ -280,9 +291,9 @@ export function motivationPrompt(p: UserProfile): string {
 - 目标：${goalLabel(p.goal)}
 - 最大挑战：${challengeLabel(p.mainChallenge)}
 - 健身水平：${fitnessLabel(p.fitnessLevel)}
-
+${noAppetiteStrategy}
 【要求】
-1. fatLossTip：1条针对该用户目标的具体、可执行减脂/健康小贴士（不是废话）。
+1. fatLossTip：1条针对该用户目标的具体、可执行健康小贴士（不是废话）。
 2. quote：1条励志名言，配上作者。
 3. dailyTask：1个今天立刻能做的具体小任务（结合用户的最大挑战）。
 4. morningRoutine：3个让早晨更有活力的小习惯，简短有力。
@@ -351,7 +362,7 @@ export function lifestylePrompt(p: UserProfile): string {
   };
 
   return `
-你是一位可持续减脂与生活方式改善专家。根据以下信息制定长期生活方式改善方案。
+你是一位可持续健康与生活方式改善专家。根据以下信息制定长期生活方式改善方案。
 
 【用户画像】
 - 年龄：${p.age}岁 | 性别：${genderLabel(p.gender)}
