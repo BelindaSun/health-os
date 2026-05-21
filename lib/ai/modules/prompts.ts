@@ -4,7 +4,7 @@
 //  每个 prompt 返回严格 JSON，extractJson.ts 负责兜底
 // ============================================================
 
-import type { UserProfile } from "../types/health";
+import type { UserProfile } from "../../types/health";
 
 // ─── 工具函数 ────────────────────────────────────────────────
 
