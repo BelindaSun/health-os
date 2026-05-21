@@ -19,7 +19,7 @@ import {
   lifestylePrompt,
 } from "./modules/prompts";
 import { extractJson } from "./utils/extractJson";
-import type { UserProfile } from "../types/health";
+import type { UserProfile } from "../../types/health";
 
 type ModuleKey =
   | "nutrition"
