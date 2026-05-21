@@ -124,6 +124,7 @@ const CHALLENGE_OPTIONS: {
   { value: "appetite", label: "食欲难控", emoji: "🍽️" },
   { value: "motivation", label: "缺乏动力", emoji: "😴" },
   { value: "time", label: "时间不够", emoji: "⏰" },
+  { value: "no_appetite", label: "没有食欲", emoji: "😶" },
 ];
 
 const LIFESTYLE_OPTIONS: { value: LifestyleType; label: string }[] = [
@@ -304,7 +305,7 @@ export default function HomePage() {
       "motivation",
       "hydrationSleep",
       "lifestyle",
-    ].every((m) => (plan[m as keyof typeof plan] as { status?: string })?.status !== "loading");
+    ].every((m) => plan[m as keyof typeof plan]?.status !== "loading");
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black text-white">
