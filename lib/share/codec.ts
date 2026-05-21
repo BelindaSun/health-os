@@ -10,7 +10,7 @@ import { HealthPlan } from "@/lib/types/health";
 
 // 只分享展示需要的字段，不带 status/id 等元信息
 type SharePayload = {
-  profile: Pick<HealthPlan["profile"], "age" | "weight" | "height" | "goal" | "gender">;
+  profile: Pick<HealthPlan["profile"], "age" | "weightKg" | "heightCm" | "goal" | "gender">;
   nutrition: HealthPlan["nutrition"];
   workout: HealthPlan["workout"];
   fasting: HealthPlan["fasting"];
@@ -31,8 +31,8 @@ export function encodePlan(plan: HealthPlan): string {
   const payload: SharePayload = {
     profile: {
       age: plan.profile.age,
-      weight: plan.profile.weight,
-      height: plan.profile.height,
+      weightKg: plan.profile.weightKg,
+      heightCm: plan.profile.heightCm,
       goal: plan.profile.goal,
       gender: plan.profile.gender,
     },
