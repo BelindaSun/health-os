@@ -1,13 +1,6 @@
 "use client";
 
-// ============================================================
-//  Health OS — 分享页 v3
-//  从 URL ?p= 解码方案，无需数据库，无需登录即可查看
-//  字段对齐 v3 类型（weightKg / heightCm / weeklyPlan 等）
-// ============================================================
-
-import { Suspense } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { decodePlan } from "@/lib/share/codec";
@@ -22,7 +15,6 @@ import type {
   ShoppingCategory,
 } from "@/lib/types/health";
 
-// ─── 分类标签（与主页一致） ───────────────────────────────────
 const CATEGORY_LABELS: Record<ShoppingCategory, string> = {
   protein: "🥩 蛋白质",
   carbs: "🌾 碳水化合物",
@@ -39,8 +31,6 @@ const MEAL_META = {
   snack:     { label: "加餐", emoji: "🥜", accent: "text-sky-400" },
 } as const;
 
-// ─── 通用小组件 ───────────────────────────────────────────────
-
 function Tag({ children }: { children: React.ReactNode }) {
   return (
     <span className="inline-block px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-slate-300">
@@ -49,13 +39,7 @@ function Tag({ children }: { children: React.ReactNode }) {
   );
 }
 
-function SectionCard({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-[28px] bg-white/[0.03] border border-white/10 backdrop-blur overflow-hidden">
       <div className="px-5 pt-5 pb-3">
@@ -77,8 +61,6 @@ function PersonalizedNote({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ─── 营养卡 ───────────────────────────────────────────────────
-
 function NutritionSection({ data }: { data: NutritionPlan }) {
   const [selectedDay, setSelectedDay] = useState(0);
   const day = data.weeklyPlan?.[selectedDay];
@@ -86,7 +68,6 @@ function NutritionSection({ data }: { data: NutritionPlan }) {
   return (
     <SectionCard title="🥗 个人营养计划">
       <div className="space-y-4">
-        {/* 热量 + 宏量 */}
         <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/8">
           <p className="text-xs text-slate-500">每日目标热量</p>
           <p className="text-3xl font-black text-emerald-400 leading-none mt-0.5">
@@ -109,7 +90,6 @@ function NutritionSection({ data }: { data: NutritionPlan }) {
           )}
         </div>
 
-        {/* 核心原则 */}
         {data.keyPrinciples?.length > 0 && (
           <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/5">
             <p className="text-xs text-slate-500 mb-2">核心饮食原则</p>
@@ -124,7 +104,6 @@ function NutritionSection({ data }: { data: NutritionPlan }) {
           </div>
         )}
 
-        {/* 7天选择器 */}
         {data.weeklyPlan?.length > 0 && (
           <>
             <div className="flex gap-1.5 flex-wrap">
@@ -133,16 +112,13 @@ function NutritionSection({ data }: { data: NutritionPlan }) {
                   key={i}
                   onClick={() => setSelectedDay(i)}
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                    selectedDay === i
-                      ? "bg-emerald-500 text-black"
-                      : "bg-white/5 text-slate-400 hover:bg-white/10"
+                    selectedDay === i ? "bg-emerald-500 text-black" : "bg-white/5 text-slate-400 hover:bg-white/10"
                   }`}
                 >
                   {d.day}
                 </button>
               ))}
             </div>
-
             {day && (
               <div className="space-y-2">
                 {(["breakfast", "lunch", "dinner", "snack"] as const).map((mealKey) => {
@@ -155,16 +131,12 @@ function NutritionSection({ data }: { data: NutritionPlan }) {
                         <span className="text-xs text-slate-400 font-medium">
                           {meta.emoji} {meta.label} · {m.name}
                         </span>
-                        <span className={`text-xs font-bold ${meta.accent}`}>
-                          {m.calories} kcal
-                        </span>
+                        <span className={`text-xs font-bold ${meta.accent}`}>{m.calories} kcal</span>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {m.foods?.map((f, fi) => <Tag key={fi}>{f}</Tag>)}
                       </div>
-                      {m.notes && (
-                        <p className="text-xs text-slate-500 mt-1.5 italic">💡 {m.notes}</p>
-                      )}
+                      {m.notes && <p className="text-xs text-slate-500 mt-1.5 italic">💡 {m.notes}</p>}
                     </div>
                   );
                 })}
@@ -176,20 +148,16 @@ function NutritionSection({ data }: { data: NutritionPlan }) {
             )}
           </>
         )}
-
-        {data.personalizedNote && (
-          <PersonalizedNote>{data.personalizedNote}</PersonalizedNote>
-        )}
+        {data.personalizedNote && <PersonalizedNote>{data.personalizedNote}</PersonalizedNote>}
       </div>
     </SectionCard>
   );
 }
 
-// ─── 训练卡 ───────────────────────────────────────────────────
-
 function WorkoutSection({ data }: { data: WorkoutPlan }) {
   const [selectedDay, setSelectedDay] = useState(0);
   const day = data.weeklySchedule?.[selectedDay];
+  const isRest = day?.focus?.includes("休息");
 
   const muscleColor = (group: string) => {
     const g = group?.toLowerCase() ?? "";
@@ -201,13 +169,10 @@ function WorkoutSection({ data }: { data: WorkoutPlan }) {
     return "bg-white/10 text-slate-300 border-white/10";
   };
 
-  const isRest = day?.focus?.includes("休息");
-
   return (
     <SectionCard title="💪 居家训练计划">
       <div className="space-y-4">
         <p className="text-xs text-slate-400 leading-relaxed">{data.overview}</p>
-
         <div className="flex gap-1.5 flex-wrap">
           {data.weeklySchedule?.map((d, i) => (
             <button
@@ -223,14 +188,12 @@ function WorkoutSection({ data }: { data: WorkoutPlan }) {
             </button>
           ))}
         </div>
-
         {day && (
           <div className="space-y-3">
             <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/8">
               <p className="text-sm font-bold text-emerald-400">{day.focus}</p>
               <p className="text-xs text-slate-500 mt-0.5">{day.durationMinutes} 分钟</p>
             </div>
-
             {isRest ? (
               <div className="p-4 rounded-2xl bg-slate-800/50 border border-white/5 text-center">
                 <p className="text-2xl mb-1">🛌</p>
@@ -262,9 +225,7 @@ function WorkoutSection({ data }: { data: WorkoutPlan }) {
                           <span className={`text-xs px-2 py-0.5 rounded-full border ${muscleColor(ex.muscleGroup)}`}>
                             {ex.muscleGroup}
                           </span>
-                          {ex.tip && (
-                            <p className="text-xs text-slate-500 flex-1 text-right ml-2">💡 {ex.tip}</p>
-                          )}
+                          {ex.tip && <p className="text-xs text-slate-500 flex-1 text-right ml-2">💡 {ex.tip}</p>}
                         </div>
                       </div>
                     ))}
@@ -282,23 +243,17 @@ function WorkoutSection({ data }: { data: WorkoutPlan }) {
             )}
           </div>
         )}
-
         {data.progressionLogic && (
           <div className="p-3 rounded-2xl bg-blue-500/5 border border-blue-500/20">
             <p className="text-xs text-blue-400 font-semibold mb-1">📈 4周进阶逻辑</p>
             <p className="text-xs text-slate-400 leading-relaxed">{data.progressionLogic}</p>
           </div>
         )}
-
-        {data.personalizedNote && (
-          <PersonalizedNote>{data.personalizedNote}</PersonalizedNote>
-        )}
+        {data.personalizedNote && <PersonalizedNote>{data.personalizedNote}</PersonalizedNote>}
       </div>
     </SectionCard>
   );
 }
-
-// ─── 断食卡 ───────────────────────────────────────────────────
 
 function FastingSection({ data }: { data: FastingPlan }) {
   return (
@@ -326,7 +281,6 @@ function FastingSection({ data }: { data: FastingPlan }) {
             </div>
           )}
         </div>
-
         <div className="grid grid-cols-2 gap-3">
           {data.fastingAllowed?.length > 0 && (
             <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/8">
@@ -353,16 +307,11 @@ function FastingSection({ data }: { data: FastingPlan }) {
             </div>
           )}
         </div>
-
-        {data.personalizedNote && (
-          <PersonalizedNote>{data.personalizedNote}</PersonalizedNote>
-        )}
+        {data.personalizedNote && <PersonalizedNote>{data.personalizedNote}</PersonalizedNote>}
       </div>
     </SectionCard>
   );
 }
-
-// ─── 购物卡 ───────────────────────────────────────────────────
 
 function ShoppingSection({ data }: { data: ShoppingPlan }) {
   const byCategory = data.items?.reduce<Record<string, typeof data.items>>(
@@ -374,7 +323,6 @@ function ShoppingSection({ data }: { data: ShoppingPlan }) {
     },
     {},
   );
-
   const budgetPct = Math.min(data.budgetUsagePercent ?? 0, 100);
   const budgetColor =
     budgetPct > 90 ? "from-rose-500 to-red-400"
@@ -388,9 +336,7 @@ function ShoppingSection({ data }: { data: ShoppingPlan }) {
           <div className="flex justify-between items-end mb-3">
             <div>
               <p className="text-xs text-slate-500">本周总花费</p>
-              <p className="text-3xl font-black text-white leading-none mt-0.5">
-                ¥{data.totalEstimatedCost}
-              </p>
+              <p className="text-3xl font-black text-white leading-none mt-0.5">¥{data.totalEstimatedCost}</p>
             </div>
             <div className="text-right">
               <p className="text-xs text-slate-500">预算使用</p>
@@ -400,19 +346,13 @@ function ShoppingSection({ data }: { data: ShoppingPlan }) {
             </div>
           </div>
           <div className="h-3 rounded-full bg-white/10 overflow-hidden">
-            <div
-              className={`h-full rounded-full bg-gradient-to-r ${budgetColor} transition-all duration-700`}
-              style={{ width: `${budgetPct}%` }}
-            />
+            <div className={`h-full rounded-full bg-gradient-to-r ${budgetColor} transition-all duration-700`} style={{ width: `${budgetPct}%` }} />
           </div>
         </div>
-
         {byCategory && Object.entries(byCategory).map(([cat, items]) => (
           <div key={cat} className="rounded-2xl bg-white/[0.03] border border-white/8 overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-sm font-semibold text-slate-300">
-                {CATEGORY_LABELS[cat as ShoppingCategory] ?? cat}
-              </span>
+              <span className="text-sm font-semibold text-slate-300">{CATEGORY_LABELS[cat as ShoppingCategory] ?? cat}</span>
               <span className="text-xs text-slate-500">({items.length}项)</span>
             </div>
             <div className="px-3 pb-3 space-y-1.5 border-t border-white/5 pt-2">
@@ -423,28 +363,19 @@ function ShoppingSection({ data }: { data: ShoppingPlan }) {
                       <span className="text-sm text-slate-200">{item.name}</span>
                       <span className="text-xs text-slate-500">{item.quantity}</span>
                     </div>
-                    {item.tip && (
-                      <p className="text-xs text-slate-600 mt-0.5 italic">💡 {item.tip}</p>
-                    )}
+                    {item.tip && <p className="text-xs text-slate-600 mt-0.5 italic">💡 {item.tip}</p>}
                   </div>
-                  <span className="text-sm text-emerald-400 font-bold ml-3 shrink-0">
-                    ¥{item.estimatedCost}
-                  </span>
+                  <span className="text-sm text-emerald-400 font-bold ml-3 shrink-0">¥{item.estimatedCost}</span>
                 </div>
               ))}
             </div>
           </div>
         ))}
-
-        {data.personalizedNote && (
-          <PersonalizedNote>{data.personalizedNote}</PersonalizedNote>
-        )}
+        {data.personalizedNote && <PersonalizedNote>{data.personalizedNote}</PersonalizedNote>}
       </div>
     </SectionCard>
   );
 }
-
-// ─── 动力卡 ───────────────────────────────────────────────────
 
 function MotivationSection({ data }: { data: DailyMotivation }) {
   return (
@@ -452,10 +383,8 @@ function MotivationSection({ data }: { data: DailyMotivation }) {
       <div className="space-y-3">
         {data.quote && (
           <div className="p-4 rounded-2xl bg-gradient-to-br from-violet-500/10 to-purple-500/10 border border-violet-500/20">
-            <p className="text-sm text-violet-300 italic">"{data.quote}"</p>
-            {data.quoteAuthor && (
-              <p className="text-xs text-slate-500 mt-1.5 text-right">— {data.quoteAuthor}</p>
-            )}
+            <p className="text-sm text-violet-300 italic">&ldquo;{data.quote}&rdquo;</p>
+            {data.quoteAuthor && <p className="text-xs text-slate-500 mt-1.5 text-right">— {data.quoteAuthor}</p>}
           </div>
         )}
         {data.dailyTask && (
@@ -470,9 +399,7 @@ function MotivationSection({ data }: { data: DailyMotivation }) {
             <div className="space-y-1.5">
               {data.morningRoutine.map((h, i) => (
                 <div key={i} className="flex gap-2.5 items-center">
-                  <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs flex items-center justify-center shrink-0">
-                    {i + 1}
-                  </span>
+                  <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs flex items-center justify-center shrink-0">{i + 1}</span>
                   <span className="text-sm text-slate-300">{h}</span>
                 </div>
               ))}
@@ -485,15 +412,11 @@ function MotivationSection({ data }: { data: DailyMotivation }) {
             <p className="text-sm text-slate-300">{data.mindsetShift}</p>
           </div>
         )}
-        {data.personalizedNote && (
-          <PersonalizedNote>{data.personalizedNote}</PersonalizedNote>
-        )}
+        {data.personalizedNote && <PersonalizedNote>{data.personalizedNote}</PersonalizedNote>}
       </div>
     </SectionCard>
   );
 }
-
-// ─── 水&睡眠卡 ────────────────────────────────────────────────
 
 function HydrationSleepSection({ data }: { data: HydrationSleepPlan }) {
   const waterMl = Math.min(Math.max(data.dailyWaterTarget ?? 2000, 1200), 4000);
@@ -508,7 +431,6 @@ function HydrationSleepSection({ data }: { data: HydrationSleepPlan }) {
             <p className="text-xs text-slate-500">{waterMl} ml</p>
           </div>
         </div>
-
         {data.hydrationSchedule?.length > 0 && (
           <div>
             <p className="text-xs text-slate-500 mb-2">饮水时间表</p>
@@ -523,7 +445,6 @@ function HydrationSleepSection({ data }: { data: HydrationSleepPlan }) {
             </div>
           </div>
         )}
-
         {data.eveningRoutine?.length > 0 && (
           <div>
             <p className="text-xs text-slate-500 mb-1.5">🌙 晚间睡眠习惯</p>
@@ -536,28 +457,21 @@ function HydrationSleepSection({ data }: { data: HydrationSleepPlan }) {
             </ul>
           </div>
         )}
-
         {data.scienceNote && (
           <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
             <p className="text-xs text-slate-400">🔬 {data.scienceNote}</p>
           </div>
         )}
-
-        {data.personalizedNote && (
-          <PersonalizedNote>{data.personalizedNote}</PersonalizedNote>
-        )}
+        {data.personalizedNote && <PersonalizedNote>{data.personalizedNote}</PersonalizedNote>}
       </div>
     </SectionCard>
   );
 }
 
-// ─── 生活方式卡 ───────────────────────────────────────────────
-
 function LifestyleSection({ data }: { data: LifestylePlan }) {
   const categoryIcon: Record<string, string> = {
     nutrition: "🥗", activity: "🏃", mindset: "🧠", lifestyle: "🌿",
   };
-
   return (
     <SectionCard title="🌿 生活方式计划">
       <div className="space-y-4">
@@ -566,7 +480,6 @@ function LifestyleSection({ data }: { data: LifestylePlan }) {
             <p className="text-base font-bold text-emerald-300 text-center">{data.headline}</p>
           </div>
         )}
-
         {data.habits?.length > 0 && (
           <div className="space-y-2">
             {data.habits.map((h, i) => (
@@ -583,72 +496,58 @@ function LifestyleSection({ data }: { data: LifestylePlan }) {
             ))}
           </div>
         )}
-
         {data.weeklyMilestones?.length > 0 && (
           <div>
             <p className="text-xs text-slate-500 mb-2">📅 4周里程碑</p>
             <div className="space-y-1.5">
               {data.weeklyMilestones.map((m, i) => (
                 <div key={i} className="flex gap-3 items-start">
-                  <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs flex items-center justify-center shrink-0">
-                    {i + 1}
-                  </span>
+                  <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs flex items-center justify-center shrink-0">{i + 1}</span>
                   <span className="text-xs text-slate-300 pt-0.5">{m}</span>
                 </div>
               ))}
             </div>
           </div>
         )}
-
         {data.challengeStrategy && (
           <div className="p-3 rounded-2xl bg-orange-500/5 border border-orange-500/20">
             <p className="text-xs text-orange-400 font-semibold mb-1">⚡ 你的挑战应对策略</p>
             <p className="text-xs text-slate-400">{data.challengeStrategy}</p>
           </div>
         )}
-
-        {data.personalizedNote && (
-          <PersonalizedNote>{data.personalizedNote}</PersonalizedNote>
-        )}
+        {data.personalizedNote && <PersonalizedNote>{data.personalizedNote}</PersonalizedNote>}
       </div>
     </SectionCard>
   );
 }
 
-// ─── 主页面 ───────────────────────────────────────────────────
+// ─── 加载占位 ─────────────────────────────────────────────────
 
-function SharePageInner() {
-  // 原来 SharePage 里的所有内容不变
-}
-
-export default function SharePage() {
+function LoadingScreen() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4 animate-pulse">🌿</div>
-          <p className="text-slate-400 text-sm">加载中...</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black text-white flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-4xl mb-4 animate-pulse">🌿</div>
+        <p className="text-slate-400 text-sm">加载中...</p>
       </div>
-    }>
-      <SharePageInner />
-    </Suspense>
+    </div>
   );
 }
 
-  // ── 加载中 ──
-  if (decoded === "loading") {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4 animate-pulse">🌿</div>
-          <p className="text-slate-400 text-sm">加载中...</p>
-        </div>
-      </div>
-    );
-  }
+// ─── 核心页面内容（需要 useSearchParams，必须包在 Suspense 里）──
 
-  // ── 链接无效 ──
+function SharePageInner() {
+  const searchParams = useSearchParams();
+  const [decoded, setDecoded] = useState<ReturnType<typeof decodePlan> | null | "loading">("loading");
+
+  useEffect(() => {
+    const p = searchParams.get("p");
+    if (!p) { setDecoded(null); return; }
+    setDecoded(decodePlan(p));
+  }, [searchParams]);
+
+  if (decoded === "loading") return <LoadingScreen />;
+
   if (!decoded) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black text-white flex items-center justify-center p-6">
@@ -658,10 +557,7 @@ export default function SharePage() {
           <p className="text-slate-400 text-sm mb-8 max-w-sm mx-auto">
             链接可能已损坏或被截断。建议让对方导出 PDF 再分享。
           </p>
-          <Link
-            href="/"
-            className="inline-block px-8 py-4 rounded-2xl bg-emerald-500 text-black font-semibold hover:bg-emerald-400 transition"
-          >
+          <Link href="/" className="inline-block px-8 py-4 rounded-2xl bg-emerald-500 text-black font-semibold hover:bg-emerald-400 transition">
             生成我自己的健康方案 →
           </Link>
         </div>
@@ -670,7 +566,6 @@ export default function SharePage() {
   }
 
   const { profile, nutrition, workout, fasting, shopping, motivation, hydrationSleep, lifestyle } = decoded;
-
   const goalLabel: Record<string, string> = {
     weight_loss: "🔥 减脂瘦身",
     muscle_gain: "💪 增肌塑形",
@@ -681,42 +576,27 @@ export default function SharePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black text-white">
       <div className="max-w-2xl mx-auto px-4 pb-24">
-
-        {/* ── 顶部导航 ── */}
         <div className="pt-8 pb-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition text-sm text-slate-300"
-          >
+          <Link href="/" className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition text-sm text-slate-300">
             ← 返回首页
           </Link>
         </div>
-
-        {/* ── 用户信息 Header ── */}
         <div className="p-6 rounded-[28px] bg-emerald-500/10 border border-emerald-500/20 mb-6">
-          <p className="text-xs text-emerald-400/60 tracking-widest uppercase mb-2">
-            AI Health OS · 个人健康方案
-          </p>
-          <h1 className="text-2xl font-black mb-3">
-            {goalLabel[profile.goal] ?? profile.goal}
-          </h1>
+          <p className="text-xs text-emerald-400/60 tracking-widest uppercase mb-2">AI Health OS · 个人健康方案</p>
+          <h1 className="text-2xl font-black mb-3">{goalLabel[profile.goal] ?? profile.goal}</h1>
           <div className="flex flex-wrap gap-3 text-sm text-slate-300">
             <span>{profile.age} 岁</span>
             <span>·</span>
             <span>{profile.gender === "female" ? "女" : profile.gender === "male" ? "男" : "其他"}</span>
             <span>·</span>
-            <span>{(profile as any).weightKg ?? (profile as any).weight} kg</span>
+            <span>{profile.weightKg} kg</span>
             <span>·</span>
-            <span>{(profile as any).heightCm ?? (profile as any).height} cm</span>
+            <span>{profile.heightCm} cm</span>
           </div>
           <p className="text-xs text-slate-500 mt-2">
-            生成于 {new Date(decoded.createdAt).toLocaleDateString("zh-CN", {
-              year: "numeric", month: "long", day: "numeric",
-            })}
+            生成于 {new Date(decoded.createdAt).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}
           </p>
         </div>
-
-        {/* ── 7个模块 ── */}
         <div className="space-y-4">
           {nutrition?.data && <NutritionSection data={nutrition.data as NutritionPlan} />}
           {workout?.data    && <WorkoutSection  data={workout.data  as WorkoutPlan} />}
@@ -726,19 +606,23 @@ export default function SharePage() {
           {hydrationSleep?.data && <HydrationSleepSection data={hydrationSleep.data as HydrationSleepPlan} />}
           {lifestyle?.data  && <LifestyleSection data={lifestyle.data as LifestylePlan} />}
         </div>
-
-        {/* ── 底部 CTA ── */}
         <div className="mt-10 p-6 rounded-[28px] border border-white/10 bg-white/[0.03] text-center">
           <p className="text-slate-400 text-sm mb-4">想要生成属于你自己的 AI 健康方案？</p>
-          <Link
-            href="/"
-            className="inline-block px-8 py-3 rounded-2xl bg-emerald-500 text-black font-semibold hover:bg-emerald-400 transition"
-          >
+          <Link href="/" className="inline-block px-8 py-3 rounded-2xl bg-emerald-500 text-black font-semibold hover:bg-emerald-400 transition">
             免费生成我的健康方案 →
           </Link>
         </div>
-
       </div>
     </div>
+  );
+}
+
+// ─── 默认导出：Suspense 包装 ──────────────────────────────────
+
+export default function SharePage() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <SharePageInner />
+    </Suspense>
   );
 }
