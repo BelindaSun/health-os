@@ -8,7 +8,7 @@
 
 import { useCallback } from "react";
 import { useProfileStore, usePlanStore, useHistoryStore } from "@/store";
-import { HealthModule } from "@/lib/types/health";
+
 import {
   NutritionPlan,
   WorkoutPlan,
