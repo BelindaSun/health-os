@@ -6,6 +6,7 @@
 //  字段对齐 v3 类型（weightKg / heightCm / weeklyPlan 等）
 // ============================================================
 
+import { Suspense } from "react";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -616,19 +617,24 @@ function LifestyleSection({ data }: { data: LifestylePlan }) {
 
 // ─── 主页面 ───────────────────────────────────────────────────
 
-export default function SharePage() {
-  const searchParams = useSearchParams();
-  const [decoded, setDecoded] = useState<ReturnType<typeof decodePlan> | null | "loading">("loading");
+function SharePageInner() {
+  // 原来 SharePage 里的所有内容不变
+}
 
-  useEffect(() => {
-    const p = searchParams.get("p");
-    if (!p) {
-      setDecoded(null);
-      return;
-    }
-    const result = decodePlan(p);
-    setDecoded(result);
-  }, [searchParams]);
+export default function SharePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4 animate-pulse">🌿</div>
+          <p className="text-slate-400 text-sm">加载中...</p>
+        </div>
+      </div>
+    }>
+      <SharePageInner />
+    </Suspense>
+  );
+}
 
   // ── 加载中 ──
   if (decoded === "loading") {
