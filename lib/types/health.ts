@@ -1,14 +1,12 @@
 // ============================================================
-//  Health OS — 类型定义 v3
-//  AIProvider 扩展为五选一：ollama/deepseek/openai/claude/gemini/qwen
+//  Health OS — 类型定义 v3.1
+//  MainChallenge 新增 no_appetite（没有食欲，瘦子增肌常见困扰）
 // ============================================================
-
-// ─── 用户画像 ────────────────────────────────────────────────
 
 export type Gender = "male" | "female" | "other";
 export type FitnessLevel = "beginner" | "intermediate" | "advanced";
 export type ActivityLevel = "low" | "medium" | "high";
-export type MainChallenge = "appetite" | "motivation" | "time";
+export type MainChallenge = "appetite" | "motivation" | "time" | "no_appetite";
 export type LifestyleType =
   | "sedentary"
   | "light_active"
@@ -30,39 +28,26 @@ export type AIProvider =
   | "qwen";
 
 export interface UserProfile {
-  // 基础生理
   age: number;
   gender: Gender;
   heightCm: number;
   weightKg: number;
-
-  // 目标与生活方式
   goal: DietGoal;
   lifestyleType: LifestyleType;
   activityLevel: ActivityLevel;
   fitnessLevel: FitnessLevel;
-
-  // 时间 & 财务
   sleepTime: string;
   wakeTime: string;
   weeklyBudget: number;
   availableMinutesPerDay: number;
-
-  // 饮食风格
   dietStyle: DietStyle;
-
-  // 器材 & 挑战
   hasEquipment: boolean;
   equipmentList?: string;
   mainChallenge: MainChallenge;
-
-  // AI 配置
   provider?: AIProvider;
-  openaiApiKey?: string; // 所有云端provider的Key都存这里
-  modelName?: string;    // 本地Ollama用
+  openaiApiKey?: string;
+  modelName?: string;
 }
-
-// ─── 通用模块状态 ────────────────────────────────────────────
 
 export type ModuleStatus = "idle" | "loading" | "success" | "error";
 
@@ -72,8 +57,6 @@ export interface ModuleState<T> {
   error?: string;
   generatedAt?: string;
 }
-
-// ─── 模块 1：营养计划 ────────────────────────────────────────
 
 export interface Meal {
   name: string;
@@ -99,8 +82,6 @@ export interface NutritionPlan {
   keyPrinciples: string[];
   personalizedNote: string;
 }
-
-// ─── 模块 2：训练计划 ────────────────────────────────────────
 
 export interface Exercise {
   name: string;
@@ -128,8 +109,6 @@ export interface WorkoutPlan {
   personalizedNote: string;
 }
 
-// ─── 模块 3：断食指南 ────────────────────────────────────────
-
 export interface FastingWindow {
   fastStart: string;
   fastEnd: string;
@@ -154,8 +133,6 @@ export interface FastingPlan {
   beginnerTips: string[];
   personalizedNote: string;
 }
-
-// ─── 模块 4：购物清单 ────────────────────────────────────────
 
 export interface ShoppingItem {
   name: string;
@@ -182,8 +159,6 @@ export interface ShoppingPlan {
   personalizedNote: string;
 }
 
-// ─── 模块 5：每日动力 ────────────────────────────────────────
-
 export interface DailyMotivation {
   fatLossTip: string;
   quote: string;
@@ -193,8 +168,6 @@ export interface DailyMotivation {
   mindsetShift: string;
   personalizedNote: string;
 }
-
-// ─── 模块 6：水&睡眠 ────────────────────────────────────────
 
 export interface HydrationEvent {
   time: string;
@@ -211,8 +184,6 @@ export interface HydrationSleepPlan {
   scienceNote: string;
   personalizedNote: string;
 }
-
-// ─── 模块 7：生活方式 ────────────────────────────────────────
 
 export interface LifestyleHabit {
   category: "nutrition" | "activity" | "mindset" | "lifestyle";
@@ -231,8 +202,6 @@ export interface LifestylePlan {
   personalizedNote: string;
 }
 
-// ─── 完整健康方案 ────────────────────────────────────────────
-
 export interface HealthPlan {
   id: string;
   createdAt: string;
@@ -245,8 +214,6 @@ export interface HealthPlan {
   hydrationSleep: ModuleState<HydrationSleepPlan>;
   lifestyle: ModuleState<LifestylePlan>;
 }
-
-// ─── Store 类型 ──────────────────────────────────────────────
 
 export interface HistoryEntry {
   id: string;
