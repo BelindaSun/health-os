@@ -56,7 +56,7 @@ async function callProvider(prompt: string, profile: UserProfile): Promise<strin
 
     case "ollama":
     default:
-      return callOllama(prompt, profile.modelName);
+      return callOllama(prompt, profile.modelName as any);
   }
 }
 
