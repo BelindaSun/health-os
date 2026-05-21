@@ -13,7 +13,7 @@ import {
   NutritionPlan,
   WorkoutPlan,
   FastingPlan,
-  ShoppingList,
+  ShoppingItem,
   DailyMotivation,
   HydrationSleepPlan,
   LifestylePlan,
@@ -81,7 +81,7 @@ export function useHealthPlan() {
 
       if (result.shopping) {
         setModuleStatus("shopping", "loading");
-        setShopping(result.shopping as ShoppingList);
+        setShopping(result.shopping as ShoppingItem);
       } else {
         setModuleStatus("shopping", "error");
       }
